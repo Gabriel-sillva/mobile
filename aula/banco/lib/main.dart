@@ -1,12 +1,11 @@
+import 'package:flutter/material.dart';
+import 'package:banco/TelaInicial.dart'; 
 import 'package:banco/TelaCartao.dart';
 import 'package:banco/TelaPix.dart';
-import 'package:flutter/material.dart';
-import 'package:banco/TelaInicial.dart';
 
 void main() {
   runApp(const MyApp());
 }
-
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -19,25 +18,32 @@ class MyApp extends StatelessWidget {
         primaryColor: const Color.fromRGBO(209, 9, 51, 1),
         scaffoldBackgroundColor: Colors.grey[100],
       ),
-      // A primeira tela que abre agora é a Inicial
       home: const TelaInicial(),
-      
-      // Rotas para facilitar a navegação entre telas
+      // Centralizei as rotas aqui para ficar fácil de dar manutenção
       routes: {
         '/home': (context) => const BradescoHome(),
+        '/pix': (context) => const TelaPix(),
+        '/cartoes': (context) => const TelaCartao(),
       },
     );
   }
 }
 
-
-class BradescoHome extends StatelessWidget {
+// Transformei a Home em StatefulWidget para a lógica do "Olhinho" do saldo funcionar
+class BradescoHome extends StatefulWidget {
   const BradescoHome({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final Color vermelhoBradesco = const Color.fromRGBO(209, 9, 51, 1);
+  State<BradescoHome> createState() => _BradescoHomeState();
+}
 
+class _BradescoHomeState extends State<BradescoHome> {
+  // Variável que controla se o saldo aparece ou não
+  bool _saldoVisivel = false;
+  final Color vermelhoBradesco = const Color.fromRGBO(209, 9, 51, 1);
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       body: SingleChildScrollView(
         child: Column(
@@ -68,22 +74,9 @@ class BradescoHome extends StatelessWidget {
                         style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
                       ),
                       const Spacer(),
-                      const Stack(
-                        children: [
-                          Icon(Icons.notifications_none, color: Colors.white, size: 28),
-                          Positioned(
-                            right: 0,
-                            child: CircleAvatar(
-                              radius: 7,
-                              backgroundColor: Colors.green,
-                              child: Text("1", style: TextStyle(fontSize: 8, color: Colors.white)),
-                            ),
-                          )
-                        ],
-                      ),
-                      const SizedBox(width: 15),
+                      // Botão Sair funcionando agora
                       TextButton(
-                        onPressed: () {},
+                        onPressed: () => Navigator.pushReplacementNamed(context, '/'),
                         child: const Text("Sair", style: TextStyle(color: Colors.white)),
                       ),
                     ],
@@ -93,48 +86,43 @@ class BradescoHome extends StatelessWidget {
                   const SizedBox(height: 5),
                   Row(
                     children: [
-                      Container(
-                        width: 110,
-                        height: 25,
-                        decoration: BoxDecoration(
-                          color: Colors.white24,
-                          borderRadius: BorderRadius.circular(4),
+                      // Lógica do Saldo: Se estiver visível mostra o valor, se não, mostra o bloco
+                      _saldoVisivel 
+                        ? const Text("R\$ 1.250,00", style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold))
+                        : Container(
+                            width: 110,
+                            height: 25,
+                            decoration: BoxDecoration(
+                              color: Colors.white24,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
+                      const SizedBox(width: 12),
+                      // Ícone do Olhinho clicável
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _saldoVisivel = !_saldoVisivel;
+                          });
+                        },
+                        child: Icon(
+                          _saldoVisivel ? Icons.visibility : Icons.visibility_off_outlined, 
+                          color: Colors.white, 
+                          size: 22
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      const Icon(Icons.visibility_outlined, color: Colors.white, size: 22),
                       const Spacer(),
                       const Text("Ver extrato", style: TextStyle(color: Colors.white, decoration: TextDecoration.underline)),
                     ],
                   ),
                   const SizedBox(height: 35),
                   // Barra de busca BIA
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 15),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    height: 55,
-                    child: Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 14,
-                          backgroundColor: Colors.white,
-                          child: Text("BIA", style: TextStyle(fontSize: 9, color: vermelhoBradesco, fontWeight: FontWeight.bold)),
-                        ),
-                        const SizedBox(width: 12),
-                        const Text("Buscar serviço ou falar com a BIA", style: TextStyle(color: Colors.white, fontSize: 14)),
-                        const Spacer(),
-                        const Icon(Icons.search, color: Colors.white),
-                      ],
-                    ),
-                  ),
+                  _buildBarraBusca(),
                 ],
               ),
             ),
 
-            // --- CONTEÚDO PRINCIPAL ---
+            // --- CONTEÚDO PRINCIPAL (FAVORITOS) ---
             Padding(
               padding: const EdgeInsets.all(20.0),
               child: Column(
@@ -143,7 +131,6 @@ class BradescoHome extends StatelessWidget {
                   const Text("Favoritos", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 20),
                   
-                  // GRID DE FAVORITOS
                   GridView.count(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
@@ -152,20 +139,16 @@ class BradescoHome extends StatelessWidget {
                     crossAxisSpacing: 10,
                     childAspectRatio: 0.85,
                     children: [
-                      _buildMenuItem(context, Icons.swap_horiz, "Transferências"),
-                      // AQUI ESTÁ A NAVEGAÇÃO PARA A TELA PIX:
-                      _buildMenuItem(context, Icons.grid_view, "Pix", telaDestino: const TelaPix()),
-                      _buildMenuItem(context, Icons.qr_code_scanner, "Pagamentos"),
-                      _buildMenuItem(context, Icons.credit_card, "Cartões", telaDestino: const TelaCartao()),
-                      _buildMenuItem(context, Icons.monetization_on_outlined, "Empréstimos"),
-                      _buildMenuItem(context, Icons.trending_up, "Investimentos"),
-                      _buildMenuItem(context, Icons.pie_chart_outline, "Open Finance"),
-                      _buildMenuItem(context, Icons.tune, "Personalizar", isBlue: true),
+                      _itemMenu(Icons.swap_horiz, "Transferências"),
+                      _itemMenu(Icons.grid_view, "Pix", rota: '/pix'),
+                      _itemMenu(Icons.qr_code_scanner, "Pagamentos"),
+                      _itemMenu(Icons.credit_card, "Cartões", rota: '/cartoes'),
+                      _itemMenu(Icons.monetization_on_outlined, "Empréstimos"),
+                      _itemMenu(Icons.trending_up, "Investimentos"),
+                      _itemMenu(Icons.pie_chart_outline, "Open Finance"),
+                      _itemMenu(Icons.tune, "Personalizar", isBlue: true),
                     ],
                   ),
-                  
-                  const SizedBox(height: 30),
-                  _buildPromoBanner(vermelhoBradesco),
                 ],
               ),
             ),
@@ -175,17 +158,12 @@ class BradescoHome extends StatelessWidget {
     );
   }
 
-  // --- FUNÇÃO DE MENU ATUALIZADA COM GESTUREDETECTOR ---
-  Widget _buildMenuItem(BuildContext context, IconData icon, String label, {bool isBlue = false, Widget? telaDestino}) {
+  // --- WIDGETS DE APOIO DENTRO DA STATE ---
+
+  Widget _itemMenu(IconData icon, String label, {bool isBlue = false, String? rota}) {
     return GestureDetector(
       onTap: () {
-        // Se uma tela de destino foi passada, navega para ela
-        if (telaDestino != null) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => telaDestino),
-          );
-        }
+        if (rota != null) Navigator.pushNamed(context, rota);
       },
       child: Column(
         children: [
@@ -194,60 +172,38 @@ class BradescoHome extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(18),
-              boxShadow: [
-                BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))
-              ],
+              boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
             ),
-            child: Icon(
-              icon, 
-              color: isBlue ? Colors.blue[700] : const Color.fromRGBO(209, 9, 51, 1), 
-              size: 28
-            ),
+            child: Icon(icon, color: isBlue ? Colors.blue : vermelhoBradesco, size: 28),
           ),
           const SizedBox(height: 8),
-          Text(
-            label,
-            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: isBlue ? Colors.blue[700] : Colors.black54),
-            textAlign: TextAlign.center,
-          ),
+          Text(label, textAlign: TextAlign.center, style: const TextStyle(fontSize: 11)),
         ],
       ),
     );
   }
 
-  Widget _buildPromoBanner(Color primaryColor) {
+  Widget _buildBarraBusca() {
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.symmetric(horizontal: 15),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 15, offset: const Offset(0, 5))],
+        color: Colors.black.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(30),
       ),
+      height: 55,
       child: Row(
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(15),
-            child: Container(width: 80, height: 80, color: Colors.grey[300], child: const Icon(Icons.image, color: Colors.white)),
+          CircleAvatar(
+            radius: 14,
+            backgroundColor: Colors.white,
+            child: Text("BIA", style: TextStyle(fontSize: 9, color: vermelhoBradesco, fontWeight: FontWeight.bold)),
           ),
-          const Expanded(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 15),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text("O Pix no Bradesco está melhor", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                  Text("Seguro contra golpes", style: TextStyle(fontSize: 12, color: Colors.black54)),
-                ],
-              ),
-            ),
-          ),
-          Icon(Icons.chevron_right, color: primaryColor),
+          const SizedBox(width: 12),
+          const Text("Buscar serviço ou falar com a BIA", style: TextStyle(color: Colors.white, fontSize: 14)),
+          const Spacer(),
+          const Icon(Icons.search, color: Colors.white),
         ],
       ),
     );
   }
 }
-
-
-
