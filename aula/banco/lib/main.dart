@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:banco/TelaInicial.dart'; 
 import 'package:banco/TelaCartao.dart';
 import 'package:banco/TelaPix.dart';
+import 'package:banco/TelaExtrato.dart'; // Certifique-se de ter criado esse arquivo
 
 void main() {
   runApp(const MyApp());
@@ -19,17 +20,16 @@ class MyApp extends StatelessWidget {
         scaffoldBackgroundColor: Colors.grey[100],
       ),
       home: const TelaInicial(),
-      // Centralizei as rotas aqui para ficar fácil de dar manutenção
       routes: {
         '/home': (context) => const BradescoHome(),
         '/pix': (context) => const TelaPix(),
         '/cartoes': (context) => const TelaCartao(),
+        '/extrato': (context) => const TelaExtrato(),
       },
     );
   }
 }
 
-// Transformei a Home em StatefulWidget para a lógica do "Olhinho" do saldo funcionar
 class BradescoHome extends StatefulWidget {
   const BradescoHome({super.key});
 
@@ -38,12 +38,30 @@ class BradescoHome extends StatefulWidget {
 }
 
 class _BradescoHomeState extends State<BradescoHome> {
-  // Variável que controla se o saldo aparece ou não
+  // --- VARIÁVEIS DE ESTADO ---
   bool _saldoVisivel = false;
+  String _filtroBia = "";
   final Color vermelhoBradesco = const Color.fromRGBO(209, 9, 51, 1);
+
+  // Lista de serviços para a BIA filtrar
+  final List<Map<String, dynamic>> _servicos = [
+    {"icon": Icons.swap_horiz, "label": "Transferências", "rota": null},
+    {"icon": Icons.grid_view, "label": "Pix", "rota": '/pix'},
+    {"icon": Icons.qr_code_scanner, "label": "Pagamentos", "rota": null},
+    {"icon": Icons.credit_card, "label": "Cartões", "rota": '/cartoes'},
+    {"icon": Icons.monetization_on_outlined, "label": "Empréstimos", "rota": null},
+    {"icon": Icons.trending_up, "label": "Investimentos", "rota": null},
+    {"icon": Icons.pie_chart_outline, "label": "Open Finance", "rota": null},
+    {"icon": Icons.tune, "label": "Personalizar", "rota": null, "isBlue": true},
+  ];
 
   @override
   Widget build(BuildContext context) {
+    // Lógica do filtro da BIA
+    final servicosFiltrados = _servicos.where((s) {
+      return s['label'].toString().toLowerCase().contains(_filtroBia.toLowerCase());
+    }).toList();
+
     return Scaffold(
       body: SingleChildScrollView(
         child: Column(
@@ -74,7 +92,6 @@ class _BradescoHomeState extends State<BradescoHome> {
                         style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
                       ),
                       const Spacer(),
-                      // Botão Sair funcionando agora
                       TextButton(
                         onPressed: () => Navigator.pushReplacementNamed(context, '/'),
                         child: const Text("Sair", style: TextStyle(color: Colors.white)),
@@ -86,68 +103,56 @@ class _BradescoHomeState extends State<BradescoHome> {
                   const SizedBox(height: 5),
                   Row(
                     children: [
-                      // Lógica do Saldo: Se estiver visível mostra o valor, se não, mostra o bloco
                       _saldoVisivel 
                         ? const Text("R\$ 1.250,00", style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold))
-                        : Container(
-                            width: 110,
-                            height: 25,
-                            decoration: BoxDecoration(
-                              color: Colors.white24,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                          ),
+                        : Container(width: 110, height: 25, decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(4))),
                       const SizedBox(width: 12),
-                      // Ícone do Olhinho clicável
                       GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _saldoVisivel = !_saldoVisivel;
-                          });
-                        },
-                        child: Icon(
-                          _saldoVisivel ? Icons.visibility : Icons.visibility_off_outlined, 
-                          color: Colors.white, 
-                          size: 22
-                        ),
+                        onTap: () => setState(() => _saldoVisivel = !_saldoVisivel),
+                        child: Icon(_saldoVisivel ? Icons.visibility : Icons.visibility_off_outlined, color: Colors.white, size: 22),
                       ),
                       const Spacer(),
-                      const Text("Ver extrato", style: TextStyle(color: Colors.white, decoration: TextDecoration.underline)),
+                      GestureDetector(
+                        onTap: () => Navigator.pushNamed(context, '/extrato'),
+                        child: const Text("Ver extrato", style: TextStyle(color: Colors.white, decoration: TextDecoration.underline)),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 35),
-                  // Barra de busca BIA
-                  _buildBarraBusca(),
+                  _buildBarraBuscaBia(), // Barra da BIA
                 ],
               ),
             ),
 
-            // --- CONTEÚDO PRINCIPAL (FAVORITOS) ---
+            // --- CONTEÚDO (FAVORITOS FILTRADOS) ---
             Padding(
               padding: const EdgeInsets.all(20.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text("Favoritos", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  Text(_filtroBia.isEmpty ? "Favoritos" : "Resultado da busca", 
+                       style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 20),
                   
-                  GridView.count(
+                  GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    crossAxisCount: 4,
-                    mainAxisSpacing: 20,
-                    crossAxisSpacing: 10,
-                    childAspectRatio: 0.85,
-                    children: [
-                      _itemMenu(Icons.swap_horiz, "Transferências"),
-                      _itemMenu(Icons.grid_view, "Pix", rota: '/pix'),
-                      _itemMenu(Icons.qr_code_scanner, "Pagamentos"),
-                      _itemMenu(Icons.credit_card, "Cartões", rota: '/cartoes'),
-                      _itemMenu(Icons.monetization_on_outlined, "Empréstimos"),
-                      _itemMenu(Icons.trending_up, "Investimentos"),
-                      _itemMenu(Icons.pie_chart_outline, "Open Finance"),
-                      _itemMenu(Icons.tune, "Personalizar", isBlue: true),
-                    ],
+                    itemCount: servicosFiltrados.length,
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 4,
+                      mainAxisSpacing: 20,
+                      crossAxisSpacing: 10,
+                      childAspectRatio: 0.85,
+                    ),
+                    itemBuilder: (context, index) {
+                      final item = servicosFiltrados[index];
+                      return _itemMenu(
+                        item['icon'], 
+                        item['label'], 
+                        isBlue: item['isBlue'] ?? false, 
+                        rota: item['rota']
+                      );
+                    },
                   ),
                 ],
               ),
@@ -158,7 +163,40 @@ class _BradescoHomeState extends State<BradescoHome> {
     );
   }
 
-  // --- WIDGETS DE APOIO DENTRO DA STATE ---
+  // --- WIDGETS AUXILIARES (DENTRO DA CLASSE STATE) ---
+
+  Widget _buildBarraBuscaBia() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 15),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(30),
+      ),
+      height: 55,
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 14,
+            backgroundColor: Colors.white,
+            child: Text("BIA", style: TextStyle(fontSize: 9, color: vermelhoBradesco, fontWeight: FontWeight.bold)),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: TextField(
+              onChanged: (value) => setState(() => _filtroBia = value),
+              style: const TextStyle(color: Colors.white),
+              decoration: const InputDecoration(
+                hintText: "Buscar serviço ou falar com a BIA",
+                hintStyle: TextStyle(color: Colors.white70, fontSize: 14),
+                border: InputBorder.none,
+              ),
+            ),
+          ),
+          const Icon(Icons.search, color: Colors.white),
+        ],
+      ),
+    );
+  }
 
   Widget _itemMenu(IconData icon, String label, {bool isBlue = false, String? rota}) {
     return GestureDetector(
@@ -182,28 +220,4 @@ class _BradescoHomeState extends State<BradescoHome> {
       ),
     );
   }
-
-  Widget _buildBarraBusca() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 15),
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(30),
-      ),
-      height: 55,
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 14,
-            backgroundColor: Colors.white,
-            child: Text("BIA", style: TextStyle(fontSize: 9, color: vermelhoBradesco, fontWeight: FontWeight.bold)),
-          ),
-          const SizedBox(width: 12),
-          const Text("Buscar serviço ou falar com a BIA", style: TextStyle(color: Colors.white, fontSize: 14)),
-          const Spacer(),
-          const Icon(Icons.search, color: Colors.white),
-        ],
-      ),
-    );
-  }
-}
+}  
