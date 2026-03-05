@@ -1,3 +1,4 @@
+import 'package:banco/TelaQrCode.dart';
 import 'package:flutter/material.dart';
 
 class TelaPix extends StatelessWidget {
@@ -8,10 +9,9 @@ class TelaPix extends StatelessWidget {
     final Color vermelhoBradesco = const Color.fromRGBO(209, 9, 51, 1);
 
     return Scaffold(
-      // Removi a AppBar padrão para usarmos o Header customizado no body
       body: Column(
         children: [
-          // --- HEADER DA TELA PIX (Igual à Home para manter o padrão) ---
+          // --- HEADER ---
           Container(
             padding: const EdgeInsets.only(top: 60, left: 20, right: 20, bottom: 30),
             decoration: BoxDecoration(
@@ -23,7 +23,6 @@ class TelaPix extends StatelessWidget {
             ),
             child: Row(
               children: [
-                // Botão para voltar
                 IconButton(
                   icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
                   onPressed: () => Navigator.pop(context),
@@ -40,16 +39,17 @@ class TelaPix extends StatelessWidget {
             ),
           ),
 
-          // --- LISTA DE BOTÕES GRANDES E ARREDONDADOS ---
+          // --- LISTA DE BOTÕES ---
           Expanded(
             child: ListView(
               padding: const EdgeInsets.all(20),
               children: [
-                _buildLargeButton(Icons.qr_code_scanner, "Pagar com QR Code"),
-                _buildLargeButton(Icons.copy, "Pix Copia e Cola"),
-                _buildLargeButton(Icons.send_outlined, "Transferir"),
-                _buildLargeButton(Icons.file_download_outlined, "Receber"),
-                _buildLargeButton(Icons.vpn_key_outlined, "Minhas Chaves"),
+                // Agora passamos o contexto e a tela de destino
+                _buildLargeButton(context, Icons.qr_code_scanner, "Pagar com QR Code", telaDestino: const Telaqrcode()),
+                _buildLargeButton(context, Icons.copy, "Pix Copia e Cola"),
+                _buildLargeButton(context, Icons.send_outlined, "Transferir"),
+                _buildLargeButton(context, Icons.file_download_outlined, "Receber"),
+                _buildLargeButton(context, Icons.vpn_key_outlined, "Minhas Chaves"),
               ],
             ),
           ),
@@ -58,14 +58,14 @@ class TelaPix extends StatelessWidget {
     );
   }
 
-  // Função para criar os botões grandes e arredondados (Cards)
-  Widget _buildLargeButton(IconData icon, String label) {
+  // --- FUNÇÃO ATUALIZADA PARA ACEITAR NAVEGAÇÃO ---
+  Widget _buildLargeButton(BuildContext context, IconData icon, String label, {Widget? telaDestino}) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 15), // Espaço entre os botões
-      height: 90, // Altura maior para o botão
+      margin: const EdgeInsets.only(bottom: 15),
+      height: 90,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20), // Bem arredondado
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
@@ -78,12 +78,19 @@ class TelaPix extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(20),
-          onTap: () {},
+          onTap: () {
+            // Se você passou uma tela, ele navega. Se não passou, não faz nada.
+            if (telaDestino != null) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => telaDestino),
+              );
+            }
+          },
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(
               children: [
-                // Ícone com fundo leve para destacar
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(

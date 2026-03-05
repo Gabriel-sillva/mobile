@@ -1,3 +1,4 @@
+import 'package:banco/TelaCartao.dart';
 import 'package:banco/TelaPix.dart';
 import 'package:flutter/material.dart';
 
@@ -147,7 +148,7 @@ class BradescoHome extends StatelessWidget {
                       // AQUI ESTÁ A NAVEGAÇÃO PARA A TELA PIX:
                       _buildMenuItem(context, Icons.grid_view, "Pix", telaDestino: const TelaPix()),
                       _buildMenuItem(context, Icons.qr_code_scanner, "Pagamentos"),
-                      _buildMenuItem(context, Icons.credit_card, "Cartões"),
+                      _buildMenuItem(context, Icons.credit_card, "Cartões", telaDestino: const Telacartao()),
                       _buildMenuItem(context, Icons.monetization_on_outlined, "Empréstimos"),
                       _buildMenuItem(context, Icons.trending_up, "Investimentos"),
                       _buildMenuItem(context, Icons.pie_chart_outline, "Open Finance"),
