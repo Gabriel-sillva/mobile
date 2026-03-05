@@ -1,10 +1,12 @@
 import 'package:banco/TelaCartao.dart';
 import 'package:banco/TelaPix.dart';
 import 'package:flutter/material.dart';
+import 'package:banco/TelaInicial.dart';
 
 void main() {
   runApp(const MyApp());
 }
+
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -16,12 +18,18 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primaryColor: const Color.fromRGBO(209, 9, 51, 1),
         scaffoldBackgroundColor: Colors.grey[100],
-        fontFamily: 'sans-serif',
       ),
-      home: const BradescoHome(),
+      // A primeira tela que abre agora é a Inicial
+      home: const TelaInicial(),
+      
+      // Rotas para facilitar a navegação entre telas
+      routes: {
+        '/home': (context) => const BradescoHome(),
+      },
     );
   }
 }
+
 
 class BradescoHome extends StatelessWidget {
   const BradescoHome({super.key});
@@ -148,7 +156,7 @@ class BradescoHome extends StatelessWidget {
                       // AQUI ESTÁ A NAVEGAÇÃO PARA A TELA PIX:
                       _buildMenuItem(context, Icons.grid_view, "Pix", telaDestino: const TelaPix()),
                       _buildMenuItem(context, Icons.qr_code_scanner, "Pagamentos"),
-                      _buildMenuItem(context, Icons.credit_card, "Cartões", telaDestino: const Telacartao()),
+                      _buildMenuItem(context, Icons.credit_card, "Cartões", telaDestino: const TelaCartao()),
                       _buildMenuItem(context, Icons.monetization_on_outlined, "Empréstimos"),
                       _buildMenuItem(context, Icons.trending_up, "Investimentos"),
                       _buildMenuItem(context, Icons.pie_chart_outline, "Open Finance"),
